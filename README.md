@@ -1,4 +1,4 @@
-# TypeScript Next.js AI SDK 5 Starter
+# TypeScript Next.js AI SDK 5 Starter Betting Agent
 
 Minimal starter for AI apps with Next.js 15, TypeScript, AI SDK 5, shadcn/ui, and AI Elements.
 Betting Agent.
