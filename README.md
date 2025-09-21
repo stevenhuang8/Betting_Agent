@@ -1,7 +1,7 @@
 # TypeScript Next.js AI SDK 5 Starter
 
 Minimal starter for AI apps with Next.js 15, TypeScript, AI SDK 5, shadcn/ui, and AI Elements.
-
+Betting Agent.
 ## Features
 
 - Clean chat interface with GPT-5
