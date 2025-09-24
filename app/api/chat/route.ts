@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       messages: aiMessages,
       tools: {
         web_search: openai.tools.webSearch({
-          searchContextSize: "low",
+          searchContextSize: "medium",
         }),
       },
     });

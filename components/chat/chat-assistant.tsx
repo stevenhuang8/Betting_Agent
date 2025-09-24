@@ -28,8 +28,6 @@ import {
   ToolOutput,
 } from "@/components/ai-elements/tool";
 import { removeUrls } from "@/lib/utils";
-import { BettingTable, type BetRecommendation } from "@/components/betting_table";
-import { Eye, EyeOff } from "lucide-react";
 
 const formatBetContent = (content: string) => {
   // Split content by common bet leg indicators and create structured segments
@@ -71,84 +69,6 @@ const formatBetContent = (content: string) => {
   });
 };
 
-const parseBettingRecommendations = (content: string): BetRecommendation[] => {
-  const bets: BetRecommendation[] = [];
-
-  // More flexible patterns for betting recommendations
-  const patterns = [
-    // Pattern: "Bet $50 on Lakers -5.5 for potential winnings of $95"
-    /bet\s+\$?(\d+(?:\.\d{2})?)\s+on\s+([^,\n]+?)\s+(?:at\s+)?([+\-]?\d+(?:\.\d+)?|over\s+\d+(?:\.\d+)?|under\s+\d+(?:\.\d+)?|[^,\n]+?)\s+for\s+(?:potential\s+)?winnings?\s+of\s+\$?(\d+(?:\.\d{2})?)/gi,
-
-    // Pattern: "Lakers -5.5: $50 bet → $95 potential"
-    /([^:\n]+?):\s+\$?(\d+(?:\.\d{2})?)\s+bet\s+[→\->]\s+\$?(\d+(?:\.\d{2})?)\s+potential/gi,
-
-    // Pattern: "Player/Team | Bet | Line | Winnings" (table-like format)
-    /([^|\n]+?)\s*\|\s*\$?(\d+(?:\.\d{2})?)\s*\|\s*([^|\n]+?)\s*\|\s*\$?(\d+(?:\.\d{2})?)/gi,
-
-    // Simple pattern: "$50 Lakers -5.5"
-    /\$(\d+(?:\.\d{2})?)\s+([^,\n]+?)\s+([+\-]?\d+(?:\.\d+)?)/gi,
-
-    // Pattern: "Lakers vs Warriors -5.5 ($50)"
-    /([^,\n]+?)\s+([+\-]?\d+(?:\.\d+)?|over\s+\d+(?:\.\d+)?|under\s+\d+(?:\.\d+)?)\s+\(\$(\d+(?:\.\d{2})?)\)/gi
-  ];
-
-  patterns.forEach((pattern, patternIndex) => {
-    let match;
-    while ((match = pattern.exec(content)) !== null) {
-
-      if (patternIndex === 0) {
-        // First pattern: amount, player/team, line, winnings
-        bets.push({
-          playerTeam: match[2].trim(),
-          lineProp: match[3].trim(),
-          amountBet: parseFloat(match[1]),
-          possibleWinnings: parseFloat(match[4]),
-          id: `bet-${bets.length}`
-        });
-      } else if (patternIndex === 1) {
-        // Second pattern: player/team, amount, winnings
-        bets.push({
-          playerTeam: match[1].trim(),
-          lineProp: "See description",
-          amountBet: parseFloat(match[2]),
-          possibleWinnings: parseFloat(match[3]),
-          id: `bet-${bets.length}`
-        });
-      } else if (patternIndex === 2) {
-        // Third pattern: player/team, amount, line, winnings
-        bets.push({
-          playerTeam: match[1].trim(),
-          lineProp: match[3].trim(),
-          amountBet: parseFloat(match[2]),
-          possibleWinnings: parseFloat(match[4]),
-          id: `bet-${bets.length}`
-        });
-      } else if (patternIndex === 3) {
-        // Fourth pattern: amount, team, line (estimate winnings)
-        const amount = parseFloat(match[1]);
-        bets.push({
-          playerTeam: match[2].trim(),
-          lineProp: match[3].trim(),
-          amountBet: amount,
-          possibleWinnings: amount * 1.9, // Estimate ~1.9x return
-          id: `bet-${bets.length}`
-        });
-      } else if (patternIndex === 4) {
-        // Fifth pattern: team, line, amount (estimate winnings)
-        const amount = parseFloat(match[3]);
-        bets.push({
-          playerTeam: match[1].trim(),
-          lineProp: match[2].trim(),
-          amountBet: amount,
-          possibleWinnings: amount * 1.9, // Estimate ~1.9x return
-          id: `bet-${bets.length}`
-        });
-      }
-    }
-  });
-
-  return bets;
-};
 
 type ChatMessage = {
   id: string;
@@ -170,7 +90,6 @@ type ChatMessage = {
 export default function ChatAssistant() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [showBettingTable, setShowBettingTable] = useState(true);
 
   console.log(messages);
 
@@ -232,21 +151,6 @@ export default function ChatAssistant() {
 
   return (
     <div className="flex flex-col h-full max-h-full overflow-hidden">
-      {/* Betting Table Toggle */}
-      <div className="flex justify-end p-2 border-b border-gray-200 bg-gray-50">
-        <button
-          onClick={() => setShowBettingTable(!showBettingTable)}
-          className="flex items-center space-x-2 px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
-          title={showBettingTable ? "Hide betting tables" : "Show betting tables"}
-        >
-          {showBettingTable ? (
-            <EyeOff className="h-4 w-4" />
-          ) : (
-            <Eye className="h-4 w-4" />
-          )}
-          <span>{showBettingTable ? "Hide" : "Show"} Betting Tables</span>
-        </button>
-      </div>
 
       <Conversation className="flex-1 h-0 overflow-hidden">
         <ConversationContent className="space-y-4">
@@ -257,11 +161,6 @@ export default function ChatAssistant() {
             />
           ) : (
             messages.map((message) => {
-              const bettingRecommendations = message.role === 'assistant'
-                ? parseBettingRecommendations(message.content)
-                : [];
-
-
               return (
                 <div key={message.id} className="w-full">
                   <Message from={message.role}>
@@ -312,18 +211,6 @@ export default function ChatAssistant() {
                     )}
                   </MessageContent>
                 </Message>
-
-                {/* Display betting table if recommendations found */}
-                {bettingRecommendations.length > 0 && showBettingTable && (
-                  <div className="mt-4">
-                    <BettingTable
-                      bets={bettingRecommendations}
-                      title="Recommended Bets"
-                      className="max-w-full"
-                    />
-                  </div>
-                )}
-
 
                 {/* Display sources if available */}
                 {message.sources && message.sources.length > 0 && (
