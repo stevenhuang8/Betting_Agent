@@ -123,19 +123,41 @@ export default function ChatAssistant() {
         body: JSON.stringify({ messages: updatedMessages }),
       });
 
-      const data = await response.json();
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to get response");
+      }
 
-      if (response.ok) {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: data.response,
-          sources: data.sources || [],
-          toolCalls: data.toolCalls || [],
-        };
-        setMessages((prev) => [...prev, assistantMessage]);
-      } else {
-        throw new Error(data.error || "Failed to get response");
+      // Create assistant message with empty content initially
+      const assistantMessageId = (Date.now() + 1).toString();
+      const assistantMessage: ChatMessage = {
+        id: assistantMessageId,
+        role: "assistant",
+        content: "",
+        sources: [],
+        toolCalls: [],
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+
+      // Read the streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) throw new Error("No response body");
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessageId
+              ? { ...msg, content: msg.content + chunk }
+              : msg
+          )
+        );
       }
     } catch (error) {
       const errorMessage: ChatMessage = {
