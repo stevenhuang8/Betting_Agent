@@ -14,20 +14,7 @@ import {
   PromptInputToolbar,
   PromptInputSubmit,
 } from "@/components/ai-elements/prompt-input";
-import {
-  Sources,
-  SourcesTrigger,
-  SourcesContent,
-  Source,
-} from "@/components/ai-elements/sources";
-import {
-  Tool,
-  ToolHeader,
-  ToolContent,
-  ToolInput,
-  ToolOutput,
-} from "@/components/ai-elements/tool";
-import { removeUrls } from "@/lib/utils";
+
 import { BetDisplay } from "@/components/betting/bet-display";
 
 // Function to extract betting analysis data from text response
