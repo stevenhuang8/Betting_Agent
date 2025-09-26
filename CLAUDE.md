@@ -39,6 +39,7 @@ This is a TypeScript Next.js 15 starter template for AI-powered applications:
 - API route at `/api/chat` expects `{ messages: array }` and returns streaming response
 - Requires `OPENAI_API_KEY` in `.env.local`
 - streamText documentation: https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text
+- generativeUI documentation: https://ai-sdk.dev/docs/ai-sdk-ui/generative-user-interfaces
 
 ### UI Components
 - **shadcn/ui** configured with:
